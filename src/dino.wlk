@@ -12,22 +12,29 @@ object juego{
 		game.addVisual(cactus)
 		game.addVisual(dino)
 		game.addVisual(reloj)
-	
+		game.addVisual(manzana)
+		
 		keyboard.space().onPressDo{ self.jugar()}
 		
 		game.onCollideDo(dino,{ obstaculo => obstaculo.chocar()})
+	
 		
 	} 
 	
 	method    iniciar(){
+		
 		dino.iniciar()
 		reloj.iniciar()
 		cactus.iniciar()
+		manzana.iniciar()
+	
 	}
 	
 	method jugar(){
-		if (dino.estaVivo()) 
+		if (dino.estaVivo()){
 			dino.saltar()
+		}
+			
 		else {
 			game.removeVisual(gameOver)
 			self.iniciar()
@@ -40,6 +47,7 @@ object juego{
 		cactus.detener()
 		reloj.detener()
 		dino.morir()
+		manzana.detener()
 	}
 	
 }
@@ -60,6 +68,8 @@ object reloj {
 	
 	method pasarTiempo() {
 		tiempo = tiempo +1
+		return tiempo
+
 	}
 	method iniciar(){
 		tiempo = 0
@@ -108,6 +118,11 @@ object suelo{
 object dino {
 	var vivo = true
 	var position = game.at(1,suelo.position().y())
+	var x=1
+
+	method xs(){
+		x=2
+	}
 	
 	method image() = "dino.png"
 	method position() = position
@@ -120,11 +135,12 @@ object dino {
 	}
 	
 	method subir(){
-		position = position.up(1)
+		position = position.up(x)
 	}
 	
 	method bajar(){
-		position = position.down(1)
+		position = position.down(x)
+		x=1
 	}
 	method morir(){
 		game.say(self,"¡Auch!")
@@ -137,3 +153,38 @@ object dino {
 		return vivo
 	}
 }
+
+/*cuando dino choca con una manzana puede saltar x2 */
+object manzana{
+	var positionInicial = game.at(game.width()+3,suelo.position().y())
+	var position = positionInicial
+	var tiempo = reloj.pasarTiempo()
+
+
+	method image()="manzana.png"
+	method position()= position
+
+	method iniciar(){
+		position = positionInicial
+
+		game.onTick(velocidad,"comerManzana",{self.chocar()})
+	}
+	
+	method chocar(){
+		position = position.left(1)
+		if (position == dino.position()){
+			dino.xs()
+			game.removeTickEvent("comerManzana")
+			
+			self.iniciar()}
+		if (position.x() == -1){
+			position = positionInicial
+		}
+	}
+	
+
+	method detener(){
+		game.removeTickEvent("comerManzana")
+	}
+	}
+	
